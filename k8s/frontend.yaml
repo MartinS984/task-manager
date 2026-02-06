@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
+  type: LoadBalancer # Gives us an external IP/URL
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: task-frontend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 80
+          env:
+            # We need to point this to our internal Backend Service
+            # Syntax: http://<service-name>:<port>
+            - name: VITE_API_URL
+              value: "http://backend:5000"

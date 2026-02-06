@@ -43,3 +43,32 @@ You don't need Node.js or MongoDB installed on your machine to run this!
 To stop and remove the containers:
 ```bash
 docker-compose down
+
+## ☸️ Kubernetes (Minikube)
+
+We use the "Local Path" strategy (building images directly inside Minikube) to avoid pushing to a remote registry.
+
+### 1. Start Minikube
+```bash
+minikube start
+2. Point Docker to Minikube
+Critical Step: This command points your terminal's Docker CLI to Minikube's internal engine.
+
+Bash
+eval $(minikube -p minikube docker-env)
+3. Build Images Locally
+Because we switched engines, we must rebuild the images so they exist inside the cluster.
+
+Bash
+docker build -t task-backend:latest ./backend
+docker build -t task-frontend:latest ./frontend
+4. Deploy
+Apply all configuration files in the k8s folder:
+
+Bash
+kubectl apply -f k8s/
+5. Access the App
+To open the frontend service in your browser:
+
+Bash
+minikube service frontend
