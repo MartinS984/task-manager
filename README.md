@@ -4,14 +4,14 @@ A full-stack 3-tier web application (React, Node.js, MongoDB) fully containerize
 
 ## 🏗 Architecture
 
-* **Frontend:** React (Vite) - Served via Nginx
-* **Backend:** Node.js (Express)
-* **Database:** MongoDB
+*   **Frontend:** React (Vite) - Served via Nginx
+*   **Backend:** Node.js (Express)
+*   **Database:** MongoDB
 
 ## 🛠 Prerequisites
 
-* Docker
-* Docker Compose
+*   Docker
+*   Docker Compose
 
 ## 🚀 Getting Started
 
@@ -19,7 +19,7 @@ You don't need Node.js or MongoDB installed on your machine to run this!
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/MartinS984/task-manager.git](https://github.com/MartinS984/task-manager.git)
+    git clone https://github.com/MartinS984/task-manager.git
     cd task-manager
     ```
 
@@ -29,20 +29,21 @@ You don't need Node.js or MongoDB installed on your machine to run this!
     ```
 
 3.  **Access the App**
-    * Frontend: [http://localhost](http://localhost)
-    * Backend API: [http://localhost:5000](http://localhost:5000)
+    *   Frontend: [http://localhost](http://localhost)
+    *   Backend API: [http://localhost:5000](http://localhost:5000)
 
 ## 📂 Project Structure
 
-* `/frontend`: React application (Multi-stage Dockerfile)
-* `/backend`: Node.js API (Standard Dockerfile)
-* `docker-compose.yml`: Orchestration for local development
+*   `/frontend`: React application (Multi-stage Dockerfile)
+*   `/backend`: Node.js API (Standard Dockerfile)
+*   `docker-compose.yml`: Orchestration for local development
 
 ## 🛑 Stopping the App
 
 To stop and remove the containers:
 ```bash
 docker-compose down
+```
 
 ## ☸️ Kubernetes (Minikube)
 
@@ -51,11 +52,13 @@ We use the "Local Path" strategy (building images directly inside Minikube) to a
 ### 1. Start Minikube
 ```bash
 minikube start
+```
 
 ### 2. Point Docker to Minikube
 Critical Step: This command points your terminal's Docker CLI to Minikube's internal engine.
 ```bash
 eval $(minikube -p minikube docker-env)
+```
 
 ### 3. Build Images Locally
 
@@ -63,6 +66,7 @@ Because we switched engines, we must rebuild the images so they exist inside the
 ```bash
 docker build -t task-backend:latest ./backend
 docker build -t task-frontend:latest ./frontend
+```
 
 ### 4. Deploy
 
@@ -70,9 +74,17 @@ Apply all configuration files in the k8s folder:
 
 ```bash
 kubectl apply -f k8s/
+```
 
 ### 5. Access the App
 To open the frontend service in your browser:
 
 ```bash
 minikube service frontend
+```
+
+## Cleanup
+```bash
+minikube stop
+minikube delete
+```
