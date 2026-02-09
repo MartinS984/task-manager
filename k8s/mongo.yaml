@@ -1,4 +1,15 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mongo-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
 kind: Service
 metadata:
   name: mongo
@@ -15,6 +26,8 @@ metadata:
   name: mongo
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: mongo
@@ -23,8 +36,24 @@ spec:
       labels:
         app: mongo
     spec:
+      # 1. This Helper Fixes Permissions First 🛠️
+      initContainers:
+        - name: fix-permissions
+          image: busybox
+          command: ["sh", "-c", "chown -R 999:999 /data/db"]
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      # 2. Then The Main Database Starts 🚀
       containers:
         - name: mongo
           image: mongo:6
           ports:
             - containerPort: 27017
+          volumeMounts:
+            - name: mongo-storage
+              mountPath: /data/db
+      volumes:
+        - name: mongo-storage
+          persistentVolumeClaim:
+            claimName: mongo-pvc

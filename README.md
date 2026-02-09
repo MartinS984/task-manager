@@ -1,89 +1,96 @@
 # 🚀 DevOps Task Manager
 
-A full-stack 3-tier web application (React, Node.js, MongoDB) fully containerized with Docker.
+A full-stack **Three-Tier Application** (React, Node.js, MongoDB) fully containerized with Docker and orchestrated with Kubernetes.
+
+This project demonstrates a complete DevOps workflow, featuring a React frontend, Node.js backend, and a **persistent** MongoDB database.
 
 ## 🏗 Architecture
 
-*   **Frontend:** React (Vite) - Served via Nginx
-*   **Backend:** Node.js (Express)
-*   **Database:** MongoDB
+* **Frontend:** React (Vite) - Served via Nginx
+* **Backend:** Node.js (Express) - REST API
+* **Database:** MongoDB - StatefulSet with Persistent Volume
+* **Orchestration:** Kubernetes (Minikube) with Ingress Controller
 
-## 🛠 Prerequisites
+---
 
-*   Docker
-*   Docker Compose
+## 🛠 Option 1: Docker Compose (Local Dev)
 
-## 🚀 Getting Started
+Quickly spin up the environment locally without Kubernetes.
 
-You don't need Node.js or MongoDB installed on your machine to run this!
-
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/MartinS984/task-manager.git
-    cd task-manager
-    ```
-
-2.  **Run with Docker Compose**
+1.  **Run with Docker Compose**
     ```bash
     docker-compose up -d --build
     ```
 
-3.  **Access the App**
-    *   Frontend: [http://localhost](http://localhost)
-    *   Backend API: [http://localhost:5000](http://localhost:5000)
+2.  **Access the App**
+    * Frontend: [http://localhost](http://localhost)
+    * Backend API: [http://localhost:5000](http://localhost:5000)
 
-## 📂 Project Structure
+3.  **Stop the App**
+    ```bash
+    docker-compose down
+    ```
 
-*   `/frontend`: React application (Multi-stage Dockerfile)
-*   `/backend`: Node.js API (Standard Dockerfile)
-*   `docker-compose.yml`: Orchestration for local development
+---
 
-## 🛑 Stopping the App
+## ☸️ Option 2: Kubernetes (Production-Ready)
 
-To stop and remove the containers:
-```bash
-docker-compose down
-```
+This deployment uses the **Minikube Docker Driver** strategy (building images directly inside the cluster) and an **Nginx Ingress Controller** for path-based routing (`/` for UI, `/tasks` for API).
 
-## ☸️ Kubernetes (Minikube)
-
-We use the "Local Path" strategy (building images directly inside Minikube) to avoid pushing to a remote registry.
-
-### 1. Start Minikube
+### 1. Start Minikube & Enable Ingress
 ```bash
 minikube start
+minikube addons enable ingress
 ```
 
 ### 2. Point Docker to Minikube
-Critical Step: This command points your terminal's Docker CLI to Minikube's internal engine.
+Critical Step: This command points your terminal's Docker CLI to Minikube's internal engine so we don't need a registry.
+
 ```bash
 eval $(minikube -p minikube docker-env)
 ```
+### 3. Build Images Inside the Cluster
+Because we switched engines, we must rebuild the images so they exist inside Minikube.
 
-### 3. Build Images Locally
-
-Because we switched engines, we must rebuild the images so they exist inside the cluster.
 ```bash
 docker build -t task-backend:latest ./backend
 docker build -t task-frontend:latest ./frontend
 ```
-
-### 4. Deploy
-
-Apply all configuration files in the k8s folder:
+### 4. Deploy to Kubernetes
+Apply all configuration files (Deployments, Services, PVC, Ingress):
 
 ```bash
 kubectl apply -f k8s/
+# Or if files are in root: kubectl apply -f .
 ```
-
-### 5. Access the App
-To open the frontend service in your browser:
+### 5. Access the App (via Ingress)
+Since we are using the Docker driver, we need a tunnel to the Ingress Controller:
 
 ```bash
-minikube service frontend
+minikube service ingress-nginx-controller -n ingress-nginx --url
 ```
+Click the first URL (HTTP) from the output to open the full application!
 
-## Cleanup
+🧪 Verification & Persistence Test
+Add a Task: Open the app and create a task (e.g., "Persistence Test").
+
+Kill the Database: Simulate a crash by deleting the MongoDB pod.
+
+```bash
+kubectl delete pod -l app=mongo
+```
+Verify: Wait for the pod to auto-restart, then refresh the page. The task will still be there!
+
+📂 Project Structure
+/frontend: React application (Multi-stage Dockerfile)
+
+/backend: Node.js API (Standard Dockerfile)
+
+/k8s: Kubernetes Manifests (Deployment, Service, PVC, Ingress)
+
+docker-compose.yml: Local development orchestration
+
+🧹 Cleanup
 ```bash
 minikube stop
 minikube delete

@@ -7,17 +7,54 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Database Connection (We will use an Environment Variable for the URL later!)
+// 1. Database Connection (The Robust Fix)
 const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/taskmanager';
+console.log(`Attempting to connect to DB at: ${mongoURI}`);
 
-// Basic Route for testing
-app.get('/', (req, res) => {
-  res.send('Backend is running!');
+mongoose.connect(mongoURI, {
+  serverSelectionTimeoutMS: 5000
+})
+.then(() => console.log('✅ MongoDB Connected!'))
+.catch(err => {
+  console.error('❌ MongoDB Connection Error:', err);
+  process.exit(1);
 });
 
-// Start Server
+// 2. The Task Schema (The Blueprint)
+const TaskSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  completed: { type: Boolean, default: false }
+});
+const Task = mongoose.model('Task', TaskSchema);
+
+// 3. The Routes (The Logic)
+// GET all tasks
+app.get('/tasks', async (req, res) => {
+  try {
+    const tasks = await Task.find();
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST a new task
+app.post('/tasks', async (req, res) => {
+  try {
+    const newTask = new Task(req.body);
+    await newTask.save();
+    res.status(201).json(newTask);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// Basic Root Route
+app.get('/', (req, res) => {
+  res.send('Backend is fully running with Tasks!');
+});
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
-  console.log(`Attempting to connect to DB at: ${mongoURI}`);
 });

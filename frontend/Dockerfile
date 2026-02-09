@@ -1,6 +1,6 @@
 # --- Stage 1: The Builder ---
 # We use Node to install dependencies and build the app
-FROM node:18-alpine AS builder
+FROM node:22-alpine as builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install

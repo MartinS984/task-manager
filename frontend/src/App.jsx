@@ -1,47 +1,69 @@
-import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from 'react';
+import './App.css';
 
 function App() {
-  const [tasks, setTasks] = useState([])
-  const [newTask, setNewTask] = useState('')
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState('');
 
-  // 1. Fetch tasks from backend when app loads
+  // 1. The API URL (Points to your Local Port Forward)
+  const API_URL = '/tasks';
+
+  // 2. Fetch Tasks on Load (The missing piece!)
   useEffect(() => {
-    // We will connect this to the real backend URL later!
-    console.log("Frontend loaded. Ready to fetch tasks.");
-  }, [])
+    fetchTasks();
+  }, []);
 
-  // 2. Handle adding a new task
-  const addTask = () => {
+  const fetchTasks = async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) throw new Error('Failed to fetch');
+      const data = await response.json();
+      console.log('Fetched tasks:', data); // Check the Console for this!
+      setTasks(data);
+    } catch (error) {
+      console.error('Error fetching tasks:', error);
+    }
+  };
+
+  const addTask = async () => {
     if (!newTask) return;
-    const task = { _id: Date.now(), title: newTask, completed: false }; // Temporary fake ID
-    setTasks([...tasks, task]);
-    setNewTask('');
-  }
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newTask, completed: false }),
+      });
+      if (response.ok) {
+        setNewTask('');
+        fetchTasks(); // Refresh the list after adding
+      }
+    } catch (error) {
+      console.error('Error adding task:', error);
+    }
+  };
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <h1> DevOps Task Manager 🚀</h1>
+    <div className="App">
+      <h1>DevOps Task Manager 🚀</h1>
       
-      <div>
+      <div className="input-group">
         <input 
-          type="text" 
           value={newTask} 
-          onChange={(e) => setNewTask(e.target.value)}
-          placeholder="Add a new task..."
+          onChange={(e) => setNewTask(e.target.value)} 
+          placeholder="Add a new task..." 
         />
         <button onClick={addTask}>Add</button>
       </div>
 
       <ul>
-        {tasks.map(task => (
+        {tasks.map((task) => (
           <li key={task._id}>
-            {task.title}
+            {task.name}
           </li>
         ))}
       </ul>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
